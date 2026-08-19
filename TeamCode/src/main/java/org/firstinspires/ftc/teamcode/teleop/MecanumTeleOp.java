@@ -34,7 +34,6 @@ public class MecanumTeleOp extends LinearOpMode {
         MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
 
         boolean fieldCentric = true;
-        boolean lastToggle = false;
 
         telemetry.addLine("Ready. Options toggles field-centric, Back resets heading.");
         telemetry.update();
@@ -47,13 +46,14 @@ public class MecanumTeleOp extends LinearOpMode {
             drive.updatePoseEstimate();
             Pose2d pose = drive.localizer.getPose();
 
-            if (gamepad1.options && !lastToggle) {
+            // *WasPressed() is a rising edge -- true only on the first loop the
+            // button goes down, so a held button toggles once, not 50x/second.
+            if (gamepad1.optionsWasPressed()) {
                 fieldCentric = !fieldCentric;
             }
-            lastToggle = gamepad1.options;
 
             // Zero the heading without disturbing the position estimate.
-            if (gamepad1.back) {
+            if (gamepad1.backWasPressed()) {
                 drive.localizer.setPose(new Pose2d(pose.position, 0));
             }
 
