@@ -6,6 +6,7 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -48,7 +49,7 @@ public class LimelightController {
     // ---------------------------------------------------------------------
 
     /** Height of the camera lens above the floor, inches. */
-    public static final double CAMERA_HEIGHT_IN = 2.5;
+    public static final double CAMERA_HEIGHT_IN = 20.5;
 
     /** Height of the target's center above the floor, inches. */
     public static final double TARGET_HEIGHT_IN = 56.0;
@@ -56,12 +57,10 @@ public class LimelightController {
     /**
      * Camera pitch, degrees, positive = tilted up from horizontal.
      *
-     * <p>With a 2.5 in camera and a 56 in target this being 0.0 is almost certainly wrong:
-     * the entire ~53.5 in of elevation then has to fall inside {@code ty}, which puts the
-     * target near the top of the FOV at 5 ft and out of frame any closer. Tilt the camera
-     * up and put the real angle here.
+     * <p>Measured 130 deg on the robot, read here as 40 deg up (measured from vertical, so
+     * 130 - 90). If range comes out way off, the other reading is 50 deg (180 - 130).
      */
-    public static final double CAMERA_PITCH_DEG = 0.0;
+    public static final double CAMERA_PITCH_DEG = 40.0;
 
     /** Camera yaw relative to robot forward, degrees, CCW-positive. */
     public static final double CAMERA_YAW_DEG = 0.0;
@@ -135,6 +134,9 @@ public class LimelightController {
 
     private boolean fresh = false;
 
+    /** Every tag in the latest live frame; empty when the camera sees none or went stale. */
+    private List<LLResultTypes.FiducialResult> visibleFiducials = Collections.emptyList();
+
     public LimelightController(HardwareMap hardwareMap, String deviceName) {
         limelight = hardwareMap.get(Limelight3A.class, deviceName);
     }
@@ -172,6 +174,7 @@ public class LimelightController {
         boolean valid = result != null
                 && result.isValid()
                 && result.getStaleness() <= MAX_STALENESS_MS;
+        visibleFiducials = valid ? fiducialsOf(result) : Collections.emptyList();
 
         if (valid) {
             // Staleness counts up while data is stale and resets when a new frame lands, so a
@@ -282,6 +285,19 @@ public class LimelightController {
     /** Fiducial ID currently being tracked, or null when the pipeline reports no fiducials. */
     public Integer getTrackedFiducialId() {
         return lastFiducialId == NO_ID ? null : lastFiducialId;
+    }
+
+    /**
+     * Every AprilTag in the latest live frame, not just the one being tracked. Raw camera
+     * angles, no filtering or holding: a tag drops out of this list the frame it leaves view.
+     */
+    public List<LLResultTypes.FiducialResult> getVisibleFiducials() {
+        return visibleFiducials;
+    }
+
+    private static List<LLResultTypes.FiducialResult> fiducialsOf(LLResult result) {
+        List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
+        return fiducials == null ? Collections.<LLResultTypes.FiducialResult>emptyList() : fiducials;
     }
 
     private static int firstFiducialId(LLResult result) {
