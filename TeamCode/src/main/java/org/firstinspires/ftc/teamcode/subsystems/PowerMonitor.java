@@ -71,6 +71,10 @@ public class PowerMonitor {
     private String[] motorNames = new String[0];
     private DcMotorEx[] motors = new DcMotorEx[0];
     private double[] motorAmps = new double[0];
+    private double[] motorPeakAmps = new double[0];
+
+    /** True when {@link #update()} reads the motors itself; false when the caller feeds them. */
+    private boolean selfReadMotors = true;
 
     private double volts = 0.0;
     private double amps = 0.0;
@@ -92,16 +96,56 @@ public class PowerMonitor {
     }
 
     /**
-     * Registers drive motors for per-motor current. Read on the same cadence as the hub, so
-     * adding four motors costs four more ADC reads every {@link #READ_PERIOD_MS}, not four
-     * more per loop. Nulls are allowed and reported as missing.
+     * Registers drive motors and reads their current here, on the same cadence as the hub, so
+     * adding four motors costs four more ADC reads every {@link #READ_PERIOD_MS} rather than
+     * four more per loop. Nulls are allowed and reported as missing.
+     *
+     * <p>Use this in an OpMode that does not already read motor current — the loop stays fast,
+     * at the cost of sampling peaks only 10 times a second. For the highest peak accuracy use
+     * {@link #trackMotors} instead.
      *
      * @param names configuration names, same order as {@code motors}
      */
     public void watchMotors(String[] names, DcMotorEx[] motors) {
+        registerMotors(names, motors);
+        this.selfReadMotors = true;
+    }
+
+    /**
+     * Registers drive motors whose current the caller reads itself and hands over with
+     * {@link #recordMotorAmps}. Nothing here reads them, so there is no extra ADC traffic.
+     *
+     * <p>Use this in an OpMode that already reads motor current every loop: feeding those
+     * values in catches peaks at the full loop rate instead of at
+     * {@link #READ_PERIOD_MS}, which matters because a stall spike can be shorter than one
+     * read period. {@link #report} then leaves out the live amps lines, assuming the caller
+     * already shows them, and prints only the peaks.
+     */
+    public void trackMotors(String[] names, DcMotorEx[] motors) {
+        registerMotors(names, motors);
+        this.selfReadMotors = false;
+    }
+
+    private void registerMotors(String[] names, DcMotorEx[] motors) {
         this.motorNames = names.clone();
         this.motors = motors.clone();
         this.motorAmps = new double[motors.length];
+        this.motorPeakAmps = new double[motors.length];
+    }
+
+    /**
+     * Hands over a motor current the caller just read, for peak tracking. Only meaningful
+     * after {@link #trackMotors}. Out-of-range indices are ignored.
+     *
+     * @param index position in the arrays passed to {@link #trackMotors}
+     * @param amps  current in amps
+     */
+    public void recordMotorAmps(int index, double amps) {
+        if (index < 0 || index >= motorAmps.length) {
+            return;
+        }
+        motorAmps[index] = amps;
+        motorPeakAmps[index] = Math.max(motorPeakAmps[index], amps);
     }
 
     /** True if anything can report voltage. False means nothing here will show real numbers. */
@@ -136,8 +180,13 @@ public class PowerMonitor {
         peakAmps = Math.max(peakAmps, amps);
         peakWatts = Math.max(peakWatts, volts * amps);
 
-        for (int i = 0; i < motors.length; i++) {
-            motorAmps[i] = (motors[i] == null) ? 0.0 : motors[i].getCurrent(CurrentUnit.AMPS);
+        if (selfReadMotors) {
+            for (int i = 0; i < motors.length; i++) {
+                if (motors[i] == null) {
+                    continue;
+                }
+                recordMotorAmps(i, motors[i].getCurrent(CurrentUnit.AMPS));
+            }
         }
         return true;
     }
@@ -198,16 +247,33 @@ public class PowerMonitor {
         return peakWatts;
     }
 
-    /** Per-motor current from the last read, amps. Empty unless {@link #watchMotors} was called. */
+    /** Per-motor current from the last read, amps. Empty unless motors were registered. */
     public double[] getMotorAmps() {
         return motorAmps.clone();
     }
 
-    /** Clears the min/peak history. Useful right before a specific maneuver. */
+    /**
+     * Highest current each motor has reached, amps, in the order the motors were registered.
+     * Empty unless motors were registered. Only as good as the sampling: see
+     * {@link #watchMotors} and {@link #trackMotors}.
+     */
+    public double[] getMotorPeakAmps() {
+        return motorPeakAmps.clone();
+    }
+
+    /** Highest current one motor has reached, amps, or 0 for an unregistered index. */
+    public double getMotorPeakAmps(int index) {
+        return (index < 0 || index >= motorPeakAmps.length) ? 0.0 : motorPeakAmps[index];
+    }
+
+    /** Clears the min/peak history, motor peaks included. Useful before a specific maneuver. */
     public void resetPeaks() {
         minVolts = Double.POSITIVE_INFINITY;
         peakAmps = 0.0;
         peakWatts = 0.0;
+        for (int i = 0; i < motorPeakAmps.length; i++) {
+            motorPeakAmps[i] = 0.0;
+        }
     }
 
     /** OK, SAG, or BROWNOUT, based on the lowest voltage seen so far. */
@@ -260,10 +326,17 @@ public class PowerMonitor {
 
         for (int i = 0; i < motorNames.length && i < motorAmps.length; i++) {
             if (motors[i] == null) {
-                put.accept(motorNames[i] + " amps", "NOT FOUND");
-            } else {
+                // In trackMotors mode the caller prints its own missing-motor line, so adding
+                // another one here would just duplicate it.
+                if (selfReadMotors) {
+                    put.accept(motorNames[i] + " amps", "NOT FOUND");
+                }
+                continue;
+            }
+            if (selfReadMotors) {
                 put.accept(motorNames[i] + " amps", round2(motorAmps[i]));
             }
+            put.accept(motorNames[i] + " amps peak", round2(motorPeakAmps[i]));
         }
     }
 

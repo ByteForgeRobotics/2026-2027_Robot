@@ -34,7 +34,14 @@ import java.util.List;
  * <p>Battery voltage and current draw come from {@link PowerMonitor}, including the lowest
  * voltage seen so far. Watch that number while accelerating hard: if it dips under
  * {@link PowerMonitor#SAG_WARN_V} the battery is tired, and anything else that looks wrong in
- * this test is probably the battery rather than the code. Back zeroes the min/peak history.
+ * this test is probably the battery rather than the code.
+ *
+ * <p>Each wheel also gets a running highest-current line ({@code FL amps peak} and friends).
+ * Drive a straight line, then compare: the four should peak close together, and a wheel that
+ * peaks well above the others is fighting something mechanical. Peaks here are sampled at
+ * {@link PowerMonitor#READ_PERIOD_MS}, which keeps the drive loop quick but can clip a very
+ * short spike — {@code Drive Motor Test} samples every loop if you need the true maximum.
+ * Back zeroes all the min/peak history.
  */
 @Config
 @TeleOp(name = "Drive Test", group = "Tests")

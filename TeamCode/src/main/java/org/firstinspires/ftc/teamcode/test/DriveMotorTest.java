@@ -25,7 +25,7 @@ import org.firstinspires.ftc.teamcode.subsystems.PowerMonitor;
  *   <li>Hold right bumper: all four at once.</li>
  *   <li>Hold left bumper while doing any of the above: run in reverse.</li>
  *   <li>Dpad up / down: raise or lower test power by 0.1.</li>
- *   <li>Back: zero all encoders.</li>
+ *   <li>Back: zero all encoders and all min/peak power history.</li>
  * </ul>
  *
  * <p>Telemetry shows power, encoder ticks, velocity, and current for each motor, on the
@@ -33,9 +33,13 @@ import org.firstinspires.ftc.teamcode.subsystems.PowerMonitor;
  * shows as "NOT FOUND" instead of crashing the OpMode.
  *
  * <p>Battery voltage and whole-robot current draw come from {@link PowerMonitor}, under the
- * per-motor lines. Per-motor amps against total amps is the useful comparison here: one motor
- * pulling far more than its neighbours at the same power is binding, mis-wired, or dragging a
- * bad bearing. Back zeroes the encoders and the min/peak power history together.
+ * per-motor lines, along with the highest current each motor has reached
+ * ({@code FL amps peak} and friends). Peak is the number to compare between motors: spin each
+ * one in turn at the same power and they should peak within a few tenths of an amp of each
+ * other. One that peaks much higher is binding, mis-wired, or dragging a bad bearing — and the
+ * live reading is easy to miss, because the spike happens in the instant the wheel breaks
+ * loose. Peaks here are sampled every loop, not on the monitor's slower cadence, so short
+ * spikes do get caught.
  */
 @Config 
 @TeleOp(name = "Drive Motor Test", group = "Diagnostics")
@@ -63,9 +67,11 @@ public class DriveMotorTest extends LinearOpMode {
         }
         resetEncoders();
 
-        // Per-motor amps are already read every loop below, so the monitor only handles the
-        // hub-level numbers here.
+        // Per-motor amps are already read every loop below, so those readings are handed to
+        // the monitor rather than read twice. Sampling every loop instead of on the monitor's
+        // slower cadence also means a brief stall spike actually lands in the peak.
         powerMonitor = new PowerMonitor(hardwareMap);
+        powerMonitor.trackMotors(NAMES, motors);
 
         telemetry.setMsTransmissionInterval(50);
 
@@ -108,10 +114,13 @@ public class DriveMotorTest extends LinearOpMode {
                     double p = (all || held[i]) ? power : 0.0;
                     m.setPower(p);
 
+                    double amps = m.getCurrent(CurrentUnit.AMPS);
+                    powerMonitor.recordMotorAmps(i, amps);
+
                     put(packet, NAMES[i] + " power", p);
                     put(packet, NAMES[i] + " ticks", m.getCurrentPosition());
                     put(packet, NAMES[i] + " vel (tps)", Math.round(m.getVelocity()));
-                    put(packet, NAMES[i] + " amps", round2(m.getCurrent(CurrentUnit.AMPS)));
+                    put(packet, NAMES[i] + " amps", round2(amps));
                 }
 
                 powerMonitor.report((key, value) -> put(packet, key, value));
