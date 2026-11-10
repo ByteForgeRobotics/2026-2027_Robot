@@ -1,5 +1,8 @@
 # FTC Robotics — Java + Road Runner
 
+> **Running the robot at a match?** Read [COMPETITION.md](COMPETITION.md): how to install,
+> config names (`FL` `FR` `BL` `BR` `pinpoint`), which OpModes to pick, and a pre-match checklist.
+
 An FTC robot controller project with Road Runner 1.0 and FTC Dashboard wired in,
 plus a working TeleOp, autonomous, and subsystem to build from — and a full
 reference for both the FTC SDK and Road Runner below.
