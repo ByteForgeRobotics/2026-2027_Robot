@@ -32,7 +32,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Odometry;
  * </ul>
  */
 @Config
-@Autonomous(name = "Auto Test", group = "Test")
+@Autonomous(name = "Auto Test", group = "Tests")
 public class AutoTest extends LinearOpMode {
 
     public static double TARGET_X = 0.0;

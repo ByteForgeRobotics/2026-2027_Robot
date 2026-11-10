@@ -45,7 +45,7 @@ import org.firstinspires.ftc.teamcode.subsystems.HuskyLensController.PollenObser
  * {@link MecanumDrive} fails to construct and the OpMode runs as a camera-only readout.
  */
 @Config
-@TeleOp(name = "HuskyLens Test", group = "Diagnostics")
+@TeleOp(name = "HuskyLens Test", group = "Tests")
 public class HuskyLensTest extends LinearOpMode {
 
     /** Name of the HuskyLens in the robot configuration. Case-sensitive. */

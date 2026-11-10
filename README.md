@@ -3,21 +3,29 @@
 > **Running the robot at a match?** Read [COMPETITION.md](COMPETITION.md): how to install,
 > config names (`FL` `FR` `BL` `BR` `pinpoint`), which OpModes to pick, and a pre-match checklist.
 
-An FTC robot controller project with Road Runner 1.0 and FTC Dashboard wired in,
-plus a working TeleOp, autonomous, and subsystem to build from — and a full
-reference for both the FTC SDK and Road Runner below.
+ByteForge Robotics' code for the 2026-27 FTC season, **BIOBUZZ presented by RTX**.
+Built on the FTC SDK with Road Runner 1.0 and FTC Dashboard, plus our own drive,
+odometry, vision and power subsystems. Part 1 and Part 2 below are a reference for
+the FTC SDK and Road Runner.
 
 | Component | Version |
 |---|---|
-| FTC SDK | 11.2.1 (July 2026) |
+| FTC SDK | 12.0.0 |
 | Road Runner | `core`/`actions` 1.0.1, `ftc` 0.1.25 |
-| FTC Dashboard | 0.5.1 |
-| Android Gradle Plugin | 8.13.2 |
-| Gradle | 9.1.0 |
+| FTC Dashboard | 0.6.0 |
+| Android Gradle Plugin | 9.3.2 |
+| Gradle | 9.5.0 |
 
-Built from the FTC SDK v11.2.1 release with the Road Runner quickstart's drive
-code layered on top, so it starts on the current SDK rather than the older one
-the quickstart ships against.
+## Branches
+
+| Branch | Use it for |
+|---|---|
+| `competition` | What goes on the robot at matches. Only tested, working code. |
+| `test` | Day-to-day work. New code lands here first. |
+| `main` | Stable history. `test` merges in once it has run on the robot. |
+
+Every push is built by GitHub Actions (the **Build** check on GitHub). A red X means
+that commit doesn't compile, so don't deploy it.
 
 ---
 
@@ -27,6 +35,8 @@ the quickstart ships against.
 - [Setup](#setup)
 - [Project layout](#project-layout)
 - [Hardware configuration names](#hardware-configuration-names)
+- [OpModes](#opmodes)
+- [Road Runner status](#road-runner-status)
 
 **Part 1 — FTC SDK reference**
 - [How an OpMode runs](#how-an-opmode-runs)
@@ -64,51 +74,92 @@ the quickstart ships against.
 ## Setup
 
 1. **Install Android Studio** (Ladybug or newer). It brings its own JDK and the
-   Android SDK, which is what actually builds this. Don't build from the
-   terminal — the system JDK on this machine is Java 26, and the Android plugin
-   needs 17 or 21.
-2. Open this folder in Android Studio: `File > Open`, pick `ftc-robotics`.
-3. Wait for the first Gradle sync. It downloads ~1 GB and takes a while.
-4. Plug in the Control Hub or a phone over USB, pick it in the device dropdown,
-   and press Run.
+   Android SDK, which is what actually builds this. If you build from the
+   terminal, use JDK 17 or 21. The Android plugin doesn't support every newer Java.
+2. Clone the repo and open the top folder in Android Studio (`File > Open`).
+3. Switch to the branch you want (see [Branches](#branches)).
+4. Wait for the first Gradle sync. It downloads ~1 GB and takes a while.
+5. Plug in the Control Hub over USB-C (or join its Wi-Fi), pick it in the
+   device dropdown, and press Run.
 
-Everything you write goes in `TeamCode`. Leave `FtcRobotController` alone — it's
+Everything we write goes in `TeamCode`. Leave `FtcRobotController` alone. It's
 FIRST's code, and editing it makes SDK updates painful.
 
 ## Project layout
 
 ```
 TeamCode/src/main/java/org/firstinspires/ftc/teamcode/
-├── MecanumDrive.java          Road Runner mecanum drive — tuned constants live here
-├── TankDrive.java             tank alternative (delete if you're on mecanum)
-├── Localizer.java             interface the localizers implement
+├── competition/                  match code (see COMPETITION.md)
+│   ├── CompTeleOp.java           mecanum TeleOp with slow mode
+│   └── CompAutoLeave.java        drives off the wall for LEAVE
+├── subsystems/                   our robot code, shared by every OpMode
+│   ├── Drivetrain.java           the four mecanum wheels; motor directions live here
+│   ├── Odometry.java             Pinpoint dead wheels: x, y, heading
+│   ├── DriveToPoint.java         drive in a straight line to a field point
+│   ├── PowerMonitor.java         battery voltage, current draw, sag warnings
+│   ├── LimelightController.java  Limelight 3A AprilTag tracking
+│   └── HuskyLensController.java  HuskyLens POLLEN tracking
+├── test/                         pit and tuning OpModes (never in a match)
+├── tuning/                       Road Runner tuning OpModes
+├── MecanumDrive.java             Road Runner mecanum drive (not tuned yet)
+├── PinpointLocalizer.java        Road Runner localizers: pick one in MecanumDrive
 ├── TwoDeadWheelLocalizer.java
 ├── ThreeDeadWheelLocalizer.java
-├── PinpointLocalizer.java     goBILDA Pinpoint odometry computer
-├── OTOSLocalizer.java         SparkFun OTOS optical sensor
-├── Drawing.java               draws the robot on the Dashboard field
-├── messages/                  log records for Dashboard flight recording
-├── tuning/                    the tuning OpModes — run these first
-├── teleop/MecanumTeleOp.java  field-centric driving, slow mode
-├── auto/SampleAutonomous.java trajectory + subsystem, running in parallel
-└── subsystems/Lift.java       how to write a Road Runner Action subsystem
+├── OTOSLocalizer.java
+├── TankDrive.java                Road Runner tank drive (unused, we're mecanum)
+├── Drawing.java                  draws the robot on the Dashboard field
+└── messages/                     log records for Dashboard flight recording
 ```
+
+**Where to put new code:** a mechanism (intake, launcher...) gets a class in
+`subsystems/` that takes a `HardwareMap` in its constructor, like `Drivetrain`.
+OpModes stay thin and just call subsystems. That way TeleOp and auto share the
+same code, and a fix in one place fixes both.
 
 ## Hardware configuration names
 
 The code looks hardware up **by name**, so the configuration on the Driver
-Station has to match these strings exactly — case and all. A typo here is the
-single most common cause of "it crashed the moment I pressed init".
+Station has to match these strings exactly — case and all.
 
-| Name | What |
-|---|---|
-| `leftFront` `leftBack` `rightFront` `rightBack` | drive motors |
-| `imu` | Control Hub built-in IMU |
-| `lift` | example subsystem motor (`subsystems/Lift.java`) |
+| Name | What | Port | Used by |
+|---|---|---|---|
+| `FL` `FR` `BL` `BR` | drive motors | motor | everything that drives |
+| `pinpoint` | goBILDA Pinpoint, two dead wheels | I2C | `Odometry`, auto, drive tests |
+| `Limelight` | Limelight 3A | USB | Limelight Test, Drive Test |
+| `huskylens` | DFRobot HuskyLens | I2C | HuskyLens Test |
+| `imu` | Control Hub built-in IMU | built in | Limelight Test, Road Runner |
 
-Dead wheel encoders plug into motor encoder ports and are named inside whichever
-localizer file you use. A Pinpoint or OTOS is an I2C device and gets its own name
-in that localizer.
+Motor directions are set in **one place for our code**: the `REVERSE_*` flags in
+`subsystems/Drivetrain.java`. (`DriveTest` and `Drive Motor Test Final` still keep
+their own copies so they can be flipped live from the Dashboard. If you change one,
+change them all.)
+
+## OpModes
+
+| Name on Driver Station | Type | What it's for |
+|---|---|---|
+| **Comp TeleOp** | TeleOp | Match driving. |
+| **Comp Auto: Leave** | Auto | Match auto: LEAVE, with a timer fallback. |
+| Drive Test | TeleOp | Drive plus Pinpoint, Limelight and battery readouts. |
+| Drive Motor Test | TeleOp | One motor at a time: wiring, direction, encoders, current. |
+| Drive Motor Test Final | TeleOp | Lean drive test with Dashboard graphs. |
+| Auto Test | Auto | Checks the dead wheels, then drives to a point. |
+| Limelight Test | TeleOp | Calibrating the Limelight mount. |
+| HuskyLens Test | TeleOp | HuskyLens POLLEN tracking readout. |
+| Road Runner tuning (several) | both | Only once you're tuning Road Runner. See below. |
+
+## Road Runner status
+
+**Not tuned yet.** `MecanumDrive` still has the quickstart defaults: no motor
+directions set, `inPerTick = 1`, `kS`/`kV` = 0, and it uses the drive encoders
+(`DriveLocalizer`) instead of the Pinpoint. Road Runner paths and the tuning
+OpModes **won't drive correctly** until that's done. Our own code (`Drivetrain`,
+`DriveToPoint`) doesn't use Road Runner and works now.
+
+To switch Road Runner over: in `MecanumDrive`, set the motor directions to match
+`Drivetrain`, change the localizer to
+`new PinpointLocalizer(hardwareMap, PARAMS.inPerTick, pose)`, then follow
+[Tuning, start to finish](#tuning-start-to-finish).
 
 ---
 
@@ -643,8 +694,8 @@ For something instant, skip the class:
 new InstantAction(() -> claw.setPosition(0.6))
 ```
 
-`subsystems/Lift.java` is a fuller worked example — a proportional controller
-that reports position through the packet and finishes inside a tolerance.
+A fuller version would be a lift `Action`: a proportional controller that reports
+position through the packet and finishes inside a tolerance.
 
 ## Markers — doing things mid-path
 
@@ -762,10 +813,14 @@ What it gives you:
 - **Field view** — the robot's estimated position, live, plus the planned path.
   The fastest way to see that a trajectory is wrong.
 - **Live config** — anything annotated `@Config` is editable while the robot
-  runs. `MecanumDrive.PARAMS` and `Lift`'s gains are both exposed, so you can
-  tune without a rebuild cycle.
+  runs. `MecanumDrive.PARAMS`, `Drivetrain`, `Odometry` and `DriveToPoint` are
+  all exposed, so you can tune without a rebuild cycle.
 - **Graphs** — plot any telemetry value over time.
 - **Camera stream**.
+
+**Not during matches.** Rule R704.D limits streaming over the robot's Wi-Fi to
+the Driver Station app, and laptops must be off the robot network during a
+MATCH (R704.C). The Dashboard is for the pits and practice.
 
 Values you change in the Dashboard are **lost on restart**. Once you're happy,
 copy them back into the source.
@@ -800,6 +855,7 @@ public class Lift {
 
 ## Competition day notes
 
+- Follow [COMPETITION.md](COMPETITION.md) for the match OpModes and checklist.
 - Build and deploy **before** you're queued, never in the queue line.
 - Keep a known-good commit tagged. `git tag qualifier-1` costs nothing and gives
   you something to fall back to.

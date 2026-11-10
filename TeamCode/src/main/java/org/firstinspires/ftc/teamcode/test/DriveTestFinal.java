@@ -15,9 +15,24 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.subsystems.PowerMonitor;
 
 
+/**
+ * Lean robot-centric drive test that sends speed, battery and Pinpoint position to both the
+ * Driver Station and FTC Dashboard (so they can be graphed).
+ *
+ * <ul>
+ *   <li>Left stick: drive and strafe. Right stick X: turn.</li>
+ *   <li>Dpad up / down: top speed +/- 0.1.</li>
+ *   <li>Y: re-send pod settings to the Pinpoint, zero it, and clear battery peaks. Keep the
+ *       robot still.</li>
+ * </ul>
+ *
+ * <p>Motor directions here are a separate copy of the ones in
+ * {@link org.firstinspires.ftc.teamcode.subsystems.Drivetrain}, so they can be flipped live
+ * from the Dashboard. Keep the two in sync.
+ */
 @Config
-@TeleOp(name = "Drive Motor Test Final", group = "Diagnostics")
-public class DrvingTestingFinal extends LinearOpMode{
+@TeleOp(name = "Drive Motor Test Final", group = "Tests")
+public class DriveTestFinal extends LinearOpMode {
 
 
     public static double MAX_DRIVE_POWER = 0.7;

@@ -42,7 +42,7 @@ import org.firstinspires.ftc.teamcode.subsystems.PowerMonitor;
  * spikes do get caught.
  */
 @Config 
-@TeleOp(name = "Drive Motor Test", group = "Diagnostics")
+@TeleOp(name = "Drive Motor Test", group = "Tests")
 public class DriveMotorTest extends LinearOpMode {
 
     /** Starting power for the test. Adjustable live with the dpad or the dashboard. */

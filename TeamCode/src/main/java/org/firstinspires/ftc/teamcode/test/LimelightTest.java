@@ -14,7 +14,7 @@ import org.firstinspires.ftc.teamcode.subsystems.LimelightController;
  * <p>Registered as {@code @TeleOp}, not {@code @Autonomous}: this is a diagnostic you run
  * while pushing the robot around, and an Autonomous OpMode gets no gamepad input.
  */
-@TeleOp(name = "Limelight Test", group = "Diagnostics")
+@TeleOp(name = "Limelight Test", group = "Tests")
 public class LimelightTest extends LinearOpMode {
 
     /** Name of the Limelight in the robot configuration. Case-sensitive. */
