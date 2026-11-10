@@ -1,3 +1,10 @@
+// ======================================================================
+// DO NOT TOUCH
+// FTC SDK versions. They must match the FtcRobotController module, and the
+// Driver Station app must be on the same version. Only change these when
+// updating the whole SDK (see "Updating this project" in README.md).
+// ======================================================================
+
 repositories {
     mavenCentral()
     google() // Needed for androidx

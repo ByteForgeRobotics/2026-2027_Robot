@@ -26,6 +26,12 @@ import org.firstinspires.ftc.teamcode.subsystems.PowerMonitor;
  *
  * <p>After AUTO it preselects Comp TeleOp on the Driver Station.
  */
+// ======================================================================
+// DO NOT TOUCH
+// This is the match auto. It scores LEAVE (3 pts) every match.
+// Change it on the test branch first and run it on the real robot
+// before it goes on the competition branch. Ask Ryan first.
+// ======================================================================
 @Autonomous(name = "Comp Auto: Leave", group = "Competition", preselectTeleOp = "Comp TeleOp")
 public class CompAutoLeave extends LinearOpMode {
 
@@ -91,6 +97,11 @@ public class CompAutoLeave extends LinearOpMode {
                 status("WAITING", String.format("%.1f s", delay - wait.seconds()));
             }
 
+            // ======================================================================
+            // DO NOT TOUCH
+            // The timer fallback is what still gets LEAVE when the Pinpoint fails.
+            // Don't remove it.
+            // ======================================================================
             result = odometry.isReady() ? driveWithOdometry(distance, forward) : "NO PINPOINT";
             if (!result.equals("ARRIVED") && opModeIsActive()) {
                 result += " -> used timer";

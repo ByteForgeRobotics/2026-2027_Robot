@@ -15,11 +15,21 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 public class Drivetrain {
 
     public static double STRAFE_MULTIPLIER = 1.1;
+    // ======================================================================
+    // DO NOT TOUCH
+    // Motor directions, checked on the real robot. Only flip one if a wheel
+    // actually spins backwards when you push the left stick forward.
+    // ======================================================================
     public static boolean REVERSE_FL = true;
     public static boolean REVERSE_FR = false;
     public static boolean REVERSE_BL = true;
     public static boolean REVERSE_BR = false;
 
+    // ======================================================================
+    // DO NOT TOUCH
+    // Must match the robot configuration on the Driver Station exactly.
+    // Renaming here without renaming there makes every OpMode lose its wheels.
+    // ======================================================================
     public static final String[] NAMES = {"FL", "FR", "BL", "BR"};
     private static final int FL = 0, FR = 1, BL = 2, BR = 3;
 
@@ -59,6 +69,10 @@ public class Drivetrain {
         double x = -left * STRAFE_MULTIPLIER; // the mixing below wants +right
         double rx = -turn;                    // and +clockwise
 
+        // ======================================================================
+        // DO NOT TOUCH
+        // Mecanum mixing math. TeleOp, auto and DriveToPoint all depend on it.
+        // ======================================================================
         double denom = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1.0);
         powers[FL] = (y + x + rx) / denom;
         powers[BL] = (y - x + rx) / denom;

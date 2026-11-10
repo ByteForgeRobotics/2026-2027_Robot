@@ -23,6 +23,13 @@ import org.firstinspires.ftc.teamcode.subsystems.PowerMonitor;
  * match. A missing motor shows as a warning instead of crashing, so the robot still drives on
  * the wheels it has.
  */
+// ======================================================================
+// DO NOT TOUCH
+// This is the match TeleOp. The team runs it at competitions.
+// Change it on the test branch first and drive it on the real robot
+// before it goes on the competition branch. Ask Ryan first.
+// The name "Comp TeleOp" must match preselectTeleOp in CompAutoLeave.
+// ======================================================================
 @TeleOp(name = "Comp TeleOp", group = "Competition")
 public class CompTeleOp extends LinearOpMode {
 

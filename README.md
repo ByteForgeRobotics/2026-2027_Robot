@@ -116,6 +116,11 @@ TeamCode/src/main/java/org/firstinspires/ftc/teamcode/
 OpModes stay thin and just call subsystems. That way TeleOp and auto share the
 same code, and a fix in one place fixes both.
 
+**`DO NOT TOUCH` comments** mark code the robot depends on in matches: config
+names, motor and pod directions, tuned gains, the match OpModes and the SDK
+versions. Don't change those without testing on the real robot, and ask Ryan
+first.
+
 ## Hardware configuration names
 
 The code looks hardware up **by name**, so the configuration on the Driver

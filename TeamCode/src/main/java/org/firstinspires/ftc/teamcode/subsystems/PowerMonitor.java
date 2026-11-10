@@ -50,6 +50,10 @@ public class PowerMonitor {
      * Milliseconds between readings. Each read is several ADC round trips, so this trades
      * display freshness against loop time. 100 ms (10 Hz) is cheap and plenty to read.
      */
+    // ======================================================================
+    // DO NOT TOUCH
+    // Every read here is slow hub traffic. Lowering this makes driving laggy.
+    // ======================================================================
     public static final long READ_PERIOD_MS = 100;
 
     /**

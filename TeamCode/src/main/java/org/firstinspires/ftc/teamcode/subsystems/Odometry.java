@@ -23,6 +23,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 @Config
 public class Odometry {
 
+    // ======================================================================
+    // DO NOT TOUCH
+    // Pinpoint settings. The name must match the Driver Station config, and
+    // the pod type and directions were checked on the robot. Wrong values
+    // make auto drive the wrong way.
+    // ======================================================================
     public static String PINPOINT_NAME = "pinpoint";
     public static GoBildaPinpointDriver.GoBildaOdometryPods POD_TYPE =
             GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD;

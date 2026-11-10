@@ -1,3 +1,4 @@
+# DO NOT TOUCH unless the build itself changes (new JDK, new Gradle task).
 # Builds the robot app on every push and pull request, so a commit that doesn't compile
 # shows a red X on GitHub before anyone tries to deploy it at a match.
 name: Build

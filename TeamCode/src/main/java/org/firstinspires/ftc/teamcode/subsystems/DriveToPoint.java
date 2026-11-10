@@ -26,6 +26,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 @Config
 public class DriveToPoint {
 
+    // ======================================================================
+    // DO NOT TOUCH
+    // Tuned gains. Change them live in FTC Dashboard to test, and only copy
+    // new values here once auto still arrives cleanly.
+    // ======================================================================
     /** Power per inch of error. 10 in away = 0.6, capped at {@link #MAX_POWER}. */
     public static double KP = 0.06;
     /** Power taken off per inch/second of speed. Brakes before the target. */
@@ -109,6 +114,11 @@ public class DriveToPoint {
             }
         }
 
+        // ======================================================================
+        // DO NOT TOUCH
+        // Field-to-robot rotation. Getting a sign wrong here sends the robot the
+        // wrong way in auto.
+        // ======================================================================
         // Rotate field -> robot: what the field calls "toward the target" depends on which
         // way the robot is facing right now.
         double h = odometry.getHeading();
