@@ -68,6 +68,7 @@ For AUTO, make sure the 30 second timer is turned on.
 - [ ] Robot fits in the 18 in cube and has its 4 pre-load POLLEN.
 - [ ] Driver Station and gamepads are charged.
 - [ ] Auto is selected with the 30 s timer on, direction and delay are set.
+- [ ] **FTC Dashboard is off** (rule R704.D bans it in matches). On the Driver Station, open the TeleOp list and run **Enable/Disable Dashboard** until it says disabled. It stays off until someone turns it back on. Do this once when you get to the event, and check it again if the robot was reflashed.
 
 ## 5. If something goes wrong
 
@@ -88,6 +89,9 @@ These are still on the list for diagnosing problems. **Don't run them in a match
 - **Drive Test**: drive plus dead wheel, Limelight and battery readouts.
 - **Auto Test**: checks the dead wheels in INIT, then drives to a point.
 - **Limelight Test** / **HuskyLens Test**: camera checks.
+- **Mechanism Test**: runs and tunes the hood, flywheel and intake (`hood`, `flywheel`, `intake` in the config). Hood all the way down before INIT.
+- **Shot Test**: aims the hood and spins the flywheel from `ShotSolver` for a distance you dial in, to check and tune real shots.
+- **Full TeleOp Test**: everything at once. Driver on gamepad 1, operator (intake, shooter, distance) on gamepad 2. Auto-aim and distance from the dead wheels once the goal spot is measured.
 
 ## Where the code lives
 

@@ -51,8 +51,12 @@ public class LimelightController {
     /** Height of the camera lens above the floor, inches. */
     public static final double CAMERA_HEIGHT_IN = 20.5;
 
-    /** Height of the target's center above the floor, inches. */
-    public static final double TARGET_HEIGHT_IN = 56.0;
+    /**
+     * Height of the target's center above the floor, inches. The AprilTag sticker on the
+     * BIOBUZZ up cell sits at about 51 in (manual Fig 9-9/9-10). The down cell's tags are at
+     * ~35 in, face under the HIVE, and can't be seen from the field.
+     */
+    public static final double TARGET_HEIGHT_IN = 51.0;
 
     /**
      * Camera pitch, degrees, positive = tilted up from horizontal.

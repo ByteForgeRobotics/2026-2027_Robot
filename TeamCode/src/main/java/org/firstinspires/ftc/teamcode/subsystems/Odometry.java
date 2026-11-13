@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
 /**
  * Robot position from the two dead wheels, read through the goBILDA Pinpoint.
@@ -18,7 +19,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
  * <h2>Coordinates</h2>
  * <p>Same as the Pinpoint and Road Runner: +x is forward, +y is left, heading is
  * counter-clockwise positive in radians. Zero is wherever the robot sat at the last
- * {@link #reset()}.
+ * {@link #reset()}, unless {@link #setPose} moved it (TeleOp sets the field start pose, see
+ * {@link Field}).
  */
 @Config
 public class Odometry {
@@ -68,6 +70,17 @@ public class Odometry {
                 REVERSE_Y_POD ? GoBildaPinpointDriver.EncoderDirection.REVERSED
                         : GoBildaPinpointDriver.EncoderDirection.FORWARD);
         pinpoint.resetPosAndIMU();
+    }
+
+    /**
+     * Tells the Pinpoint where the robot is right now (inches, radians), e.g. its start spot in
+     * the field frame. Call after the robot is still and {@link #reset()} has finished
+     * calibrating (at START is a good time), or the reset will zero it again.
+     */
+    public void setPose(double xIn, double yIn, double headingRad) {
+        if (pinpoint != null) {
+            pinpoint.setPosition(new Pose2D(DistanceUnit.INCH, xIn, yIn, AngleUnit.RADIANS, headingRad));
+        }
     }
 
     /** Reads the Pinpoint. Call once per loop, before any getter. */

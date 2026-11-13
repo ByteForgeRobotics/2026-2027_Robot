@@ -130,6 +130,9 @@ Station has to match these strings exactly — case and all.
 |---|---|---|---|
 | `FL` `FR` `BL` `BR` | drive motors | motor | everything that drives |
 | `pinpoint` | goBILDA Pinpoint, two dead wheels | I2C | `Odometry`, auto, drive tests |
+| `hood` | hood motor, with encoder | motor | `Hood`, Mechanism Test |
+| `flywheel` | shooter flywheel motor, with encoder | motor | `Flywheel`, Mechanism Test |
+| `intake` | intake roller motor, with encoder | motor | `Intake`, Mechanism Test |
 | `Limelight` | Limelight 3A | USB | Limelight Test, Drive Test |
 | `huskylens` | DFRobot HuskyLens | I2C | HuskyLens Test |
 | `imu` | Control Hub built-in IMU | built in | Limelight Test, Road Runner |

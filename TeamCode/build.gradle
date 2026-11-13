@@ -43,4 +43,7 @@ dependencies {
     implementation "com.acmerobotics.roadrunner:core:1.0.1"
     implementation "com.acmerobotics.roadrunner:actions:1.0.1"
     implementation "com.acmerobotics.dashboard:dashboard:0.6.0"
+
+    // Laptop-only unit tests (TeamCode/src/test). Not put on the robot.
+    testImplementation "junit:junit:4.13.2"
 }
